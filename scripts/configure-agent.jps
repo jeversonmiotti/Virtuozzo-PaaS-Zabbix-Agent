@@ -1,0 +1,49 @@
+type: update
+name: Zabbix Agent reconfig
+baseUrl: https://raw.githubusercontent.com/Aureliolo/Jelastic-Zabbix-Server/master
+logo: images/zabbix.svg
+skipNodeEmails: true
+
+onInstall:
+  - variables-modification
+  - configure-zabbix-agent
+
+
+actions:
+  variables-modification:
+    - log: check variables and set them correctly
+    - if (${settings.remotecmd} === true):
+        setGlobals: 
+          REMOTE_COMMAND: EnableRemoteCommands=1 
+    - else:
+        setGlobals: 
+          REMOTE_COMMAND: DenyKey=system.run[*]
+          REMOTE_LOGGING: 0
+    - if (${settings.remotelogging} === true):
+        setGlobals: 
+          REMOTE_LOGGING: 1
+    - else:
+        setGlobals: 
+          REMOTE_LOGGING: 0
+
+  configure-zabbix-agent:
+    - log: Configures the Zabbix Agent with chosen details
+    - cmd[${settings.node}]: |-
+        SERVER=$(hostname)
+        sed -i '171d' /etc/zabbix/zabbix_agentd.conf
+        sed -i "171i Hostname=$SERVER" /etc/zabbix/zabbix_agentd.conf
+        sed -i '119d' /etc/zabbix/zabbix_agentd.conf
+        sed -i "119i Server=127.0.0.1,${settings.serverip}" /etc/zabbix/zabbix_agentd.conf
+        sed -i '160d' /etc/zabbix/zabbix_agentd.conf
+        sed -i "160i ServerActive=127.0.0.1,${settings.serverip}" /etc/zabbix/zabbix_agentd.conf
+        sed -i '76d' /etc/zabbix/zabbix_agentd.conf
+        sed -i "76i ${globals.REMOTE_COMMAND}" /etc/zabbix/zabbix_agentd.conf
+        sed -i '103d' /etc/zabbix/zabbix_agentd.conf
+        sed -i "103i LogRemoteCommands=${globals.REMOTE_LOGGING}" /etc/zabbix/zabbix_agentd.conf
+        systemctl restart zabbix-agent &>> /var/log/run.log
+      user: root
+      sayYes: true
+
+return:
+  type: info
+  message: Zabbix Agent has been re-configured

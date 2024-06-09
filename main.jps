@@ -1,0 +1,169 @@
+type: update
+name: Zabbix Agent
+baseUrl: https://raw.githubusercontent.com/Aureliolo/Jelastic-Zabbix-Agent/master
+logo: images/zabbix.svg
+homepage: https://zabbix.com
+
+description:
+  text: |
+    Zabbix Agent for monitoring of nodes and servers  
+    This Addon installs the Agent and allows you to configure and update it  
+    **Only CENTOS nodes are supported**
+
+  short: The buttons allow you to reconfigure the agent as well as update it
+
+skipNodeEmails: true
+
+targetNodes:
+  nodeGroup: '*'
+
+settings:
+  main:
+    fields:
+      - type: string
+        name: serverip
+        caption: Zabbix server IP
+        placeholder: 10.0.0.1
+        required: true
+      - type: checkbox
+        name: remotecmd
+        value: false
+        caption: Enable remote commands from Zabbix server
+        showIf:
+          true:
+            type: checkbox
+            name: remotelogging
+            value: true
+            caption: Enable logging of executed shell commands as warnings
+          false:
+            type: compositefield
+            hideLabel: true
+            pack: left
+            name: remotelogging
+            value: false
+            itemCls: deploy-manager-grid
+            cls: x-grid3-row-unselected
+            items: [{
+              type: "displayfield",
+              cls: "x-grid3-row-checker x-item-disabled",
+              margins: "0 0 0 -3",
+              width: 20,
+              height: 20
+            }, {
+              type: "displayfield",
+              cls: "x-item-disabled",
+              value: "Enable logging of executed shell commands as warnings",
+              margins: "0 0 0 10"
+            }]
+
+onUninstall:
+  - delete
+
+onAfterRedeployContainer:
+  - redeploy
+
+onInstall:
+  - variables-modification
+  - download-install-zabbix
+  - configure-zabbix-agent
+
+buttons:
+  - confirmText: Do you want to update the Zabbix Agent?
+    loadingText: Updating...
+    action: update
+    caption: Update Zabbix Agent
+    successText: Zabbix Agent has been upgraded
+  - caption: Configure
+    action: configure
+    settings: main
+    loadingText: Configuring...
+    successText: /text/success.md
+
+actions:
+  variables-modification:
+    - log: check variables and set them correctly
+    - if (settings.remotecmd === true):
+        setGlobals: 
+          REMOTE_COMMAND: EnableRemoteCommands=1
+    - else:
+        setGlobals: 
+          REMOTE_COMMAND: DenyKey=system.run[*]
+          REMOTE_LOGGING: 0
+    - if (settings.remotelogging === true):
+        setGlobals: 
+          REMOTE_LOGGING: 1
+    - else:
+        setGlobals: 
+          REMOTE_LOGGING: 0
+    - setGlobals:
+        SERVER_IP: ${settings.serverip}
+
+  download-install-zabbix:
+    - log: Downloads and installs Zabbix Agent
+    - cmd [${targetNodes.nodeGroup}]: |-
+        yum install -y logrotate
+        rpm --import https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-A14FE591 &>> /var/log/run.log
+        rpm -Uvh https://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-agent-5.0.0-1.el7.x86_64.rpm &>> /var/log/run.log
+        echo /etc/zabbix >> /etc/jelastic/redeploy.conf
+      user: root
+      sayYes: true
+
+  configure-zabbix-agent:
+    - log: Configures the Zabbix Agent with chosen details
+    - cmd [${targetNodes.nodeGroup}]: |-
+        SERVER=$(hostname)
+        sed -i '171d' /etc/zabbix/zabbix_agentd.conf
+        sed -i "171i Hostname=$SERVER" /etc/zabbix/zabbix_agentd.conf
+        sed -i '119d' /etc/zabbix/zabbix_agentd.conf
+        sed -i "119i Server=127.0.0.1,${globals.SERVER_IP}" /etc/zabbix/zabbix_agentd.conf
+        sed -i '160d' /etc/zabbix/zabbix_agentd.conf
+        sed -i "160i ServerActive=127.0.0.1,${globals.SERVER_IP}" /etc/zabbix/zabbix_agentd.conf
+        sed -i '76d' /etc/zabbix/zabbix_agentd.conf
+        sed -i "76i ${globals.REMOTE_COMMAND}" /etc/zabbix/zabbix_agentd.conf
+        sed -i '103d' /etc/zabbix/zabbix_agentd.conf
+        sed -i "103i LogRemoteCommands=${globals.REMOTE_LOGGING}" /etc/zabbix/zabbix_agentd.conf
+        systemctl start zabbix-agent &>> /var/log/run.log
+        systemctl enable zabbix-agent &>> /var/log/run.log
+      user: root
+      sayYes: true
+
+  update:
+    - log: Configure the zabbix Agent
+    - install: ${baseUrl}/scripts/update-agent.jps
+      settings:
+        node: "${targetNodes.nodeGroup}"
+      skipEmail: true
+
+  configure:
+    - log: Configure the zabbix Agent
+    - install: ${baseUrl}/scripts/configure-agent.jps
+      settings:
+        node: "${targetNodes.nodeGroup}"
+        serverip: "${settings.serverip}"
+        remotelogging: "${settings.remotelogging}"
+        remotecmd: "${settings.remotecmd}"
+      skipEmail: true
+
+  redeploy:
+    - log: re-downloads and enables agent
+    - cmd [${targetNodes.nodeGroup}]: |-
+        rpm --import https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-A14FE591 &>> /var/log/run.log
+        rpm -Uvh https://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-agent-5.0.0-1.el7.x86_64.rpm &>> /var/log/run.log
+        systemctl start zabbix-agent &>> /var/log/run.log
+        systemctl enable zabbix-agent &>> /var/log/run.log
+      user: root
+      sayYes: true    
+
+  delete:
+    - log: Removes config and uninstalls agent
+    - cmd [${targetNodes.nodeGroup}]: |-
+        systemctl disable zabbix-agent &>> /var/log/run.log
+        systemctl stop zabbix-agent &>> /var/log/run.log
+        yum -y remove zabbix-agent &>> /var/log/run.log
+        rm -r /etc/zabbix &>> /var/log/run.log
+      user: root
+      sayYes: true
+
+success:
+  type: info
+  message: ${baseUrl}/text/success.md

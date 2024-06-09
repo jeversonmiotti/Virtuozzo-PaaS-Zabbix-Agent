@@ -1,0 +1,23 @@
+type: update
+name: Zabbix Agent update
+baseUrl: https://raw.githubusercontent.com/Aureliolo/Jelastic-Zabbix-Server/master
+logo: images/zabbix.svg
+skipNodeEmails: true
+
+
+onInstall:
+  - update-zabbix
+
+
+actions:
+  update-zabbix:
+    - log: Updates zabbix Agent
+    - cmd [${settings.node}]: |-
+        yum upgrade -y zabbix-agent &>> /var/log/run.log
+        systemctl restart zabbix-agent &>> /var/log/run.logs
+      user: root
+      sayYes: true
+
+return:
+  type: info
+  message: Zabbix Agent has been updated
