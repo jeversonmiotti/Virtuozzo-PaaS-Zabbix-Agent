@@ -15,7 +15,7 @@ If it says centos then you can install this addon.
 # Installation
 Simply import this link using the Jelastic JPS Import function:
 ```
-https://raw.githubusercontent.com/Aureliolo/Jelastic-Zabbix-Agent/master/main.jps
+https://raw.githubusercontent.com/jeversonmiotti/Virtuozzo-PaaS-Zabbix-Agent/main/main.jps
 ```
 
 Or copy the content of main.jps into the import window.
@@ -24,7 +24,7 @@ Or copy the content of main.jps into the import window.
 # Usage
 When installing the addon you have 3 options to configure:
 
-<img src="https://github.com/Aureliolo/Jelastic-Zabbix-Agent/raw/master/images/configuration.png" width="520">
+<img src="https://github.com/jeversonmiotti/Virtuozzo-PaaS-Zabbix-Agent/blob/main/images/configuration.png?raw=true" width="520">
 
 All 3 get set in /etc/zabbix/zabbix_agentd.conf
 
@@ -35,7 +35,7 @@ Remote Logging is only available if Remote Command is activated and sets either 
 
 Once the Addon is installed there are 2 available buttons:
 
-<img src="https://github.com/Aureliolo/Jelastic-Zabbix-Agent/raw/master/images/interface.png" width="520">
+<img src="https://github.com/jeversonmiotti/Virtuozzo-PaaS-Zabbix-Agent/blob/main/images/interface.png?raw=true" width="520">
 
 Update will update the agent to newest version.
 
