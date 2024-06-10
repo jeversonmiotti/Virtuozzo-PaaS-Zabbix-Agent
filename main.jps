@@ -5,12 +5,18 @@ logo: images/zabbix.svg
 homepage: https://zabbix.com
 
 description:
-  text: |
-    Zabbix Agent for monitoring of nodes and servers  
-    This Addon installs the Agent and allows you to configure and update it  
-    **Only CENTOS nodes are supported**
-
-  short: The buttons allow you to reconfigure the agent as well as update it
+  text:
+    {
+      en: "Zabbix Agent for monitoring of nodes and servers . This Addon installs the Agent and allows you to configure and update it. **Only AlmaLinux and CENTOS nodes are supported**",
+      pt: "Agente Zabbix para monitoramento de nós e servidores. Este Addon instala o Agente e permite configurá-lo e atualizá-lo.**Apenas nós AlmaLinux e CENTOS são suportados**",
+      es: "Agente Zabbix para monitoreo de nodos y servidores. Este complemento instala el Agente y le permite configurarlo y actualizarlo. **Solo se admiten nodos AlmaLinux y CENTOS**"
+    }
+  short:
+    {
+      en: "The buttons allow you to reconfigure the agent as well as update it",
+      pt: "Os botões permitem reconfigurar o agente, bem como atualizá-lo",
+      es: "Los botones le permiten reconfigurar el agente así como actualizarlo."
+    }
 
 skipNodeEmails: true
 
