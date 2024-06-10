@@ -2,7 +2,7 @@
 Installs the Zabbix agents and connects it to your zabbix server
 
 
-**Only CENTOS based nodes are supported** 
+**Only AlmaLinux/CENTOS based nodes are supported** 
 This should be all the nodes where the user has no root rights by default essentially.
 
 To know if your node is supported you can use this command in shell:
